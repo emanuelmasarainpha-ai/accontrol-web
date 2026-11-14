@@ -682,3 +682,13 @@ html[data-kind] .foot { background: color-mix(in srgb, var(--kind-deep) 26%, var
   .step:first-child { margin-top: 22px; }
   .story__steps { padding-bottom: 12vh; }
 }
+
+/* Compara en celular: el nombre del espacio, entero y centrado sobre su columna */
+@media (max-width: 833px) {
+  .cmp tr > :first-child { width: 60%; }
+  .cmp[data-col="1"] tr > :nth-child(2), .cmp[data-col="2"] tr > :nth-child(3), .cmp[data-col="3"] tr > :nth-child(4), .cmp[data-col="4"] tr > :nth-child(5) { width: 40%; text-align: center; }
+  .cmp thead th { white-space: normal; font-size: 1.0625rem; line-height: 1.15; padding: 14px 8px; vertical-align: middle; }
+  .cmp thead th:not(:first-child) { text-align: center; }
+  .cmp thead th .dot { display: block; margin: 0 auto 6px; }
+  .cmp td svg { margin: 0 auto; }
+}
