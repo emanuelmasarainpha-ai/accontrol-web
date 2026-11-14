@@ -692,3 +692,9 @@ html[data-kind] .foot { background: color-mix(in srgb, var(--kind-deep) 26%, var
   .cmp thead th .dot { display: block; margin: 0 auto 6px; }
   .cmp td svg { margin: 0 auto; }
 }
+
+/* ════════ Logo: monograma AC entrelazado con la ✓ ════════ */
+.gnav__logo { height: 24px; width: auto; display: block; }
+.app__mark { width: 1.9em; height: 1.9em; flex: none; }
+.close__mark { width: clamp(150px, 18vw, 230px); height: auto; }
+.lnav__title img { height: 22px; width: auto; display: block; }

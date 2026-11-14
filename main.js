@@ -516,7 +516,7 @@ const I = {
 const ui = (icon, text) => `<span class="ui">${icon || ''}${text ? `<span>${text}</span>` : ''}</span>`;
 
 /* ════════ Dibujos del instalador: el equipo de cada sistema, con el cursor o el dedo haciendo el paso ════════ */
-const MARK = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="2" y="2" width="60" height="60" rx="13" fill="#34204f" stroke="#cdbbf0" stroke-width="3"/><path d="M19 46 32 16 45 46" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M24.5 37.5h15" stroke="#fff" stroke-width="4.5" stroke-linecap="round"/></g>`;
+const MARK = (x, y, s) => `<image href="assets/brand/icono.svg" x="${x}" y="${y}" width="${64 * s}" height="${64 * s}"/>`;
 const LOCK = (x, y, s = 0.42) => `<g class="o" transform="translate(${x} ${y}) scale(${s})"><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></g>`;
 const TXT = (x, y, size, cls, s, anchor = 'start') => `<text class="${cls}" x="${x}" y="${y}" style="font-size:${size}px" text-anchor="${anchor}">${s}</text>`;
 
