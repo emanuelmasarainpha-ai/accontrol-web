@@ -1,0 +1,12 @@
+# Archivos de trabajo de diseño (capturas de revisión, bocetos): no van a la web
+.impeccable/
+
+# Letras que la página ya no usa
+assets/fonts/barlow-*.woff2
+assets/fonts/OFL-Barlow.txt
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+node_modules/

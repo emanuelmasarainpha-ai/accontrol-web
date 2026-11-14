@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Marca de ACCONTROL para las barras de color: la «A» dentro de un doble filete, como el recuadro de valor de
+       un billete. Blanca y sin fondo, para ir sobre cualquier denominación (violeta, naranja, verde azulado, carmín). -->
+  <rect x="2" y="2" width="60" height="60" rx="13" fill="none" stroke="#ffffff" stroke-width="2.5"/>
+  <rect x="7" y="7" width="50" height="50" rx="9" fill="none" stroke="#ffffff" stroke-opacity="0.45" stroke-width="1.2"/>
+  <path d="M19 46 L32 16 L45 46" fill="none" stroke="#ffffff" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M24.5 37.5 H39.5" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+</svg>
