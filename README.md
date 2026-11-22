@@ -54,7 +54,7 @@ Cada artículo puede llevar un video horizontal (1920×1080) bajo el título. En
 `video: /assets/videos/<nombre>.mp4`, `videoPoster: /assets/videos/<nombre>.jpg` (portada) y
 `videoDuration: PT1M14S` (duración). Opcional: `videoCaption:` y `videoDate:`. El generador pone el reproductor
 (se carga solo al darle play) y los datos de video para Google. Los videos se hacen en la carpeta
-`accontrol-blog-videos` (ver su `LEEME.md`). Ahora mismo **van sin voz**; cuando estén las voces se reemplazan.
+`accontrol-blog-videos` (ver su `LEEME.md`). Llevan la voz de cada guion, sincronizada palabra a palabra.
 
 ## Activar el formulario de contacto
 
