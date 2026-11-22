@@ -355,8 +355,8 @@ for (const post of posts) {
   const figure = post.image ? `<figure class="post__figure"><img src="${post.image}" alt="${esc(post.imageAlt || '')}" width="${post.imageWidth || ''}" height="${post.imageHeight || ''}" loading="lazy" decoding="async">${post.imageCaption ? `<figcaption>${esc(post.imageCaption)}</figcaption>` : ''}</figure>` : '';
   // Video del artículo (campos video, videoPoster y videoDuration del encabezado): reproductor bajo el título y VideoObject para Google.
   const video = post.video ? `<figure class="post__video">
-        <video controls preload="none" playsinline poster="${esc(post.videoPoster || '')}" width="1920" height="1080" aria-describedby="vid-cap">
-          <source src="${esc(post.video)}" type="video/mp4">
+        <video controls preload="none" playsinline poster="${post.videoPoster ? `${esc(post.videoPoster)}?v=${SITE.assetVersion}` : ''}" width="1920" height="1080" aria-describedby="vid-cap">
+          <source src="${esc(post.video)}?v=${SITE.assetVersion}" type="video/mp4">
           Tu navegador no puede reproducir este video.
         </video>
         <figcaption id="vid-cap">${esc(post.videoCaption || 'Video: lo principal de este artículo en poco más de un minuto.')}</figcaption>

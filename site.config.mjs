@@ -12,7 +12,7 @@ export const SITE = {
   shareImage: '/assets/icon-512.png',
   logo: '/assets/icon-512.png',
   // Versión de los estilos y el código de las páginas nuevas (súbela cuando cambies site.css o site.js).
-  assetVersion: '20261122a',
+  assetVersion: '20261122b',
 };
 
 // Categorías del blog: el orden es el de los filtros. «tone» es el color de la marca que usa cada una.
