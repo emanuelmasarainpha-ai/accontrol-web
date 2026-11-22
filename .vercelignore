@@ -3,3 +3,5 @@ PRODUCT.md
 DESIGN.md
 README.md
 tools/
+content/
+site.config.mjs

@@ -1,0 +1,6 @@
+# ACCONTROL · todo el sitio es público; no hay paneles privados en este dominio.
+User-agent: *
+Allow: /
+Disallow: /blog/search-index.json
+
+Sitemap: https://accontrol-web.vercel.app/sitemap.xml
