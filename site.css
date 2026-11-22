@@ -133,6 +133,9 @@
 .post__figure { margin: 0 0 1.6em; display: grid; justify-items: center; gap: 10px; }
 .post__figure img { width: min(100%, 300px); height: auto; border-radius: 28px; border: 1px solid var(--rule-2); background: var(--sheet); }
 .post__figure figcaption { color: var(--faint); font-size: .875rem; text-align: center; }
+.post__video { max-width: 1026px; margin: 28px 0 0; display: grid; gap: 10px; }
+.post__video video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 22px; border: 1px solid var(--rule-2); background: #0e121a; }
+.post__video figcaption { color: var(--faint); font-size: .875rem; }
 .disclaimer { margin-top: 2.4em !important; padding: 16px 18px; border-radius: 14px; background: var(--paper-2); border: 1px solid var(--rule); color: var(--muted); font-size: .9375rem; line-height: 1.55; }
 
 .post__foot { display: flex; flex-wrap: wrap; gap: 20px 32px; justify-content: space-between; align-items: center; margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--rule); }

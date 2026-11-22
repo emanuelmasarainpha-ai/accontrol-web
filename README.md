@@ -48,6 +48,14 @@ Las páginas generadas (`blog/`, `sobre-nosotros.html`, `contacto.html`, `privac
 
 El listado, las categorías, los artículos relacionados, el buscador y el sitemap se actualizan solos.
 
+### Video del artículo
+
+Cada artículo puede llevar un video horizontal (1920×1080) bajo el título. En el encabezado:
+`video: /assets/videos/<nombre>.mp4`, `videoPoster: /assets/videos/<nombre>.jpg` (portada) y
+`videoDuration: PT1M14S` (duración). Opcional: `videoCaption:` y `videoDate:`. El generador pone el reproductor
+(se carga solo al darle play) y los datos de video para Google. Los videos se hacen en la carpeta
+`accontrol-blog-videos` (ver su `LEEME.md`). Ahora mismo **van sin voz**; cuando estén las voces se reemplazan.
+
 ## Activar el formulario de contacto
 
 Hoy el formulario se ve, pero **no envía** (y lo dice). Para activarlo:

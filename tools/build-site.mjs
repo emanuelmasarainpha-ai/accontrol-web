@@ -353,12 +353,25 @@ for (const post of posts) {
     body = body.replace(`<h2 id="${target}">`, `${middle}\n<h2 id="${target}">`);
   }
   const figure = post.image ? `<figure class="post__figure"><img src="${post.image}" alt="${esc(post.imageAlt || '')}" width="${post.imageWidth || ''}" height="${post.imageHeight || ''}" loading="lazy" decoding="async">${post.imageCaption ? `<figcaption>${esc(post.imageCaption)}</figcaption>` : ''}</figure>` : '';
+  // Video del artículo (campos video, videoPoster y videoDuration del encabezado): reproductor bajo el título y VideoObject para Google.
+  const video = post.video ? `<figure class="post__video">
+        <video controls preload="none" playsinline poster="${esc(post.videoPoster || '')}" width="1920" height="1080" aria-describedby="vid-cap">
+          <source src="${esc(post.video)}" type="video/mp4">
+          Tu navegador no puede reproducir este video.
+        </video>
+        <figcaption id="vid-cap">${esc(post.videoCaption || 'Video: lo principal de este artículo en poco más de un minuto.')}</figcaption>
+      </figure>` : '';
+  const videoLd = post.video ? {
+    '@type': 'VideoObject', name: post.title, description: post.description, thumbnailUrl: abs(post.videoPoster || SITE.shareImage),
+    uploadDate: post.videoDate || post.updated, contentUrl: abs(post.video), embedUrl: abs(post.url), inLanguage: SITE.lang,
+    ...(post.videoDuration ? { duration: post.videoDuration } : {}), publisher: { '@id': ORGANIZATION['@id'] },
+  } : null;
   const shareUrl = encodeURIComponent(abs(post.url));
   const shareText = encodeURIComponent(post.title);
   const html = `${head({
     title: `${post.title} | Blog de ACCONTROL`, description: post.description, path: post.url, type: 'article',
     extra: `<meta property="article:published_time" content="${post.date}">\n  <meta property="article:modified_time" content="${post.updated}">\n  <meta property="article:section" content="${esc(cat.name)}">`,
-    ld: [ORGANIZATION, ld, bc.ld],
+    ld: [ORGANIZATION, ld, bc.ld, ...(videoLd ? [videoLd] : [])],
   })}
 ${header('blog')}
   <main id="contenido" class="post tone-${cat.tone}">
@@ -370,6 +383,7 @@ ${header('blog')}
         <p class="post__lede">${esc(post.description)}</p>
         <p class="post__meta"><time datetime="${post.date}">${longDate(post.date)}</time><span aria-hidden="true">·</span><span>${post.minutes} min de lectura</span><span aria-hidden="true">·</span><span>Publicado por ACCONTROL</span></p>
       </header>
+      ${video}
       <div class="post__layout${post.toc.length >= 4 ? '' : ' post__layout--single'}">
         ${post.toc.length >= 4 ? `<nav class="toc" aria-labelledby="toc-t">
           <p class="toc__t" id="toc-t">En este artículo</p>
