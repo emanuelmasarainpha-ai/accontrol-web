@@ -58,7 +58,8 @@ Cada artículo puede llevar un video horizontal (1920×1080) bajo el título. En
 
 ## Activar el formulario de contacto
 
-Hoy el formulario se ve, pero **no envía** (y lo dice). Para activarlo:
+**Activado** (22 nov 2026) con Formspree: `https://formspree.io/f/meagpodq`. Los mensajes llegan al correo de ACCONTROL.
+Para cambiar de servicio o de formulario:
 
 1. Crea una cuenta en un servicio de formularios que acepte JSON, por ejemplo [Formspree](https://formspree.io)
    (tiene plan gratuito con un límite de mensajes al mes). Usa un correo de ACCONTROL para recibir los mensajes.

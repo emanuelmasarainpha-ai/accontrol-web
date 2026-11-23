@@ -50,7 +50,7 @@ export const ADS = {
 // claridad que todavía no envía. Sirve cualquier servicio que acepte JSON por POST (por ejemplo Formspree:
 // https://formspree.io/f/XXXXXXX). Ver README.md → «Activar el formulario de contacto».
 export const CONTACT = {
-  endpoint: '',
+  endpoint: 'https://formspree.io/f/meagpodq', // Formspree: los mensajes llegan al correo de ACCONTROL
 };
 
 // ─── Analítica ───────────────────────────────────────────────────────────────
