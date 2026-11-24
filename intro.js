@@ -11,7 +11,14 @@
 // - La decide el script del <head> de index.html (clase `has-intro`), antes de pintar, para que no se vea la página
 //   un instante. Sin JavaScript, o con un enlace a otra sección (#…, salvo #resumen), no sale.
 // - Un toque, un clic o una tecla la saltan. Con «reducir movimiento» sale una versión calmada (solo fundidos).
-// - No usa librerías: un reloj con requestAnimationFrame para el logo y la Web Animations API para la página.
+// - Al terminar avisa con el evento `accontrol:intro-end` (main.js espera a ese aviso para contar el billete).
+//
+// Fluidez (sobre todo en celulares):
+// - Solo el trazo de las letras, la raya y la palabra se calculan cuadro a cuadro (requestAnimationFrame), y solo se
+//   tocan los atributos que cambian.
+// - El giro del guilloché, los fundidos del fondo, el vuelo del logo y el armado de la página usan la Web Animations
+//   API con transform/opacity: la tarjeta gráfica los mueve sola aunque el teléfono esté ocupado cargando la página.
+// - Nada de desenfoques (filter: blur) al armar la página: son lo más caro de pintar.
 'use strict';
 
 (() => {
@@ -23,9 +30,10 @@
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Línea de tiempo (ms). La versión calmada se salta el trazo y el vuelo.
+  // drawA/drawC: cada letra se escribe por su cuenta, con calma, como a pluma.
   const T = calm
-    ? { draw: [0, 0], fill: [0, 700], line: [200, 700], word: [500, 1100], hold: 1600, exit: [1600, 2200], page: 1650, end: 2250 }
-    : { draw: [150, 1100], fill: [850, 1300], line: [1150, 1650], word: [1750, 2350], hold: 2650, exit: [2650, 3350], page: 2700, end: 3400 };
+    ? { drawA: [0, 0], drawC: [0, 0], fill: [0, 700], line: [200, 700], word: [500, 1100], rings: 1, hold: 1600, exit: [1600, 2200] }
+    : { drawA: [150, 1400], drawC: [550, 1800], fill: [1500, 2000], line: [1850, 2350], word: [2450, 3050], rings: 2000, hold: 3350, exit: [3350, 4050] };
 
   // Medidas del logo (unidades de su dibujo, viewBox «2 130 2153 420»).
   const VIEW = { x: 2, y: 130, w: 2153, h: 420 };
@@ -41,11 +49,31 @@
   const outExpo = (t) => (t >= 1 ? 1 : 1 - Math.pow(2, -10 * t));
   const outQuint = (t) => 1 - Math.pow(1 - t, 5);
   const inOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const inOutSine = (t) => -(Math.cos(Math.PI * t) - 1) / 2; // trazo de pluma: arranca y termina suave, ritmo parejo
   const lerp = (a, b, t) => a + (b - a) * t;
+  const EASE_OUT = 'cubic-bezier(.16, 1, .3, 1)';
+  const EASE_IN_OUT = 'cubic-bezier(.65, 0, .35, 1)';
+
+  // Solo escribe un atributo si su valor cambió (cada escritura obliga a repintar).
+  const last = new WeakMap();
+  const setA = (node, name, value) => {
+    let m = last.get(node);
+    if (!m) { m = new Map(); last.set(node, m); }
+    if (m.get(name) === value) return;
+    m.set(name, value);
+    node.setAttribute(name, value);
+  };
+  const r3 = (v) => String(Math.round(v * 1000) / 1000);
+  const r1 = (v) => String(Math.round(v * 10) / 10);
 
   /** Se acabó: todo queda como si nunca hubiera habido intro. */
+  let finished = false;
+  const announce = () => dispatchEvent(new Event('accontrol:intro-end'));
   let cleanup = () => {
+    if (finished) return;
+    finished = true;
     root.classList.remove('has-intro', 'intro-run');
+    announce();
   };
 
   // Pestaña en segundo plano: no vale la pena (nadie la vería y los relojes van lentos).
@@ -90,13 +118,17 @@
   root.classList.remove('has-intro'); // la tapa del <head> ya no hace falta: ahora tapa la capa de la intro
 
   let skipRequested = false;
-  const skip = () => { skipRequested = true; };
+  let onSkip = () => { skipRequested = true; };
+  const skip = () => onSkip();
   const skipEvents = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
   skipEvents.forEach((type) => addEventListener(type, skip, { passive: true }));
   cleanup = () => {
+    if (finished) return;
+    finished = true;
     skipEvents.forEach((type) => removeEventListener(type, skip));
     layer.remove();
     root.classList.remove('has-intro', 'intro-run');
+    announce();
   };
 
   // Si el logo no llega en un tiempo razonable, no se hace esperar a nadie.
@@ -104,7 +136,7 @@
 
   fetch(LOGO_URL)
     .then((r) => (r.ok ? r.text() : Promise.reject(new Error(String(r.status)))))
-    .then((text) => { clearTimeout(giveUp); run(text); })
+    .then((text) => { clearTimeout(giveUp); if (!finished) run(text); })
     .catch(() => { clearTimeout(giveUp); cleanup(); });
 
   // ---- El logo, armado para animar ----------------------------------------------------------------------------
@@ -176,22 +208,22 @@
     return { svg, mono, a, c, word, lineClip, wordClip, flash };
   }
 
-  // ---- Páginas: lo que se arma al final -----------------------------------------------------------------------
+  // ---- Página: lo que se arma al final ------------------------------------------------------------------------
+  // Solo opacidad y `translate` (no `transform`: main.js mueve con transform la computadora y el texto al hacer scroll,
+  // y así las dos cosas se suman en vez de pisarse).
   function assemblePage() {
-    const ease = 'cubic-bezier(.16, 1, .3, 1)';
-    const base = calm ? [{ opacity: 0 }, { opacity: 1 }] : null;
-    const rise = (nodes, { delay = 0, step = 60, y = 26, blur = 8, duration = 760 } = {}) => {
+    const rise = (nodes, { delay = 0, step = 60, y = 26, duration = 760 } = {}) => {
       nodes.filter(Boolean).forEach((node, i) => {
-        node.animate(base ?? [
-          { opacity: 0, transform: `translateY(${y}px)`, filter: `blur(${blur}px)` },
-          { opacity: 1, transform: 'none', filter: 'blur(0px)' },
-        ], { duration: calm ? 500 : duration, delay: delay + i * step, easing: ease, fill: 'backwards' });
+        node.animate(calm
+          ? [{ opacity: 0 }, { opacity: 1 }]
+          : [{ opacity: 0, translate: `0 ${y}px` }, { opacity: 1, translate: '0 0' }],
+        { duration: calm ? 500 : duration, delay: delay + i * step, easing: EASE_OUT, fill: 'backwards' });
       });
     };
     const $$ = (s) => [...document.querySelectorAll(s)];
     // Barra de arriba: entra de arriba; luego cada enlace.
-    rise([document.querySelector('.gnav__bar')], { y: -18, blur: 0, duration: 600 });
-    rise($$('.gnav__menu > .gnav__item, .gnav__cta, .gnav__burger'), { delay: 120, step: 45, y: -12, blur: 0 });
+    rise([document.querySelector('.gnav__bar')], { y: -18, duration: 600 });
+    rise($$('.gnav__menu > .gnav__item, .gnav__cta, .gnav__burger'), { delay: 120, step: 45, y: -12 });
 
     // Titular: palabra por palabra (al terminar se devuelve el texto tal como estaba).
     const title = document.querySelector('.hero__title');
@@ -205,16 +237,16 @@
         return i < words.length - 1 ? [span, document.createTextNode(' ')] : [span];
       }));
       const spans = [...title.querySelectorAll('.intro-w')];
-      rise(spans, { delay: 160, step: 70, y: 46, blur: 12, duration: 900 });
-      const last = (160 + (spans.length - 1) * 70 + 900) + 50;
-      setTimeout(() => { title.innerHTML = original; }, last);
+      rise(spans, { delay: 160, step: 70, y: 46, duration: 900 });
+      const end = (160 + (spans.length - 1) * 70 + 900) + 50;
+      setTimeout(() => { title.innerHTML = original; }, end);
     } else {
       rise([title], { delay: 120 });
     }
     rise([document.querySelector('.hero__sub')], { delay: 520 });
-    rise([...document.querySelectorAll('.hero__actions > *')], { delay: 660, step: 90, y: 18, blur: 4 });
-    rise([document.querySelector('.hero__fine')], { delay: 820, blur: 0 });
-    rise([document.querySelector('.hero .device')], { delay: 760, y: 80, blur: 6, duration: 1100 });
+    rise([...document.querySelectorAll('.hero__actions > *')], { delay: 660, step: 90, y: 18 });
+    rise([document.querySelector('.hero__fine')], { delay: 820 });
+    rise([document.querySelector('.hero .device')], { delay: 760, y: 80, duration: 1100 });
   }
 
   // ---- El reloj -----------------------------------------------------------------------------------------------
@@ -250,87 +282,125 @@
     };
     let from = startBox();
     placeAt(from);
-    addEventListener('resize', () => { from = startBox(); placeAt(from); });
+    const onResize = () => { from = startBox(); placeAt(from); };
+    addEventListener('resize', onResize);
+
+    // Guilloché: aparece, gira despacio y «respira» cuando termina la raya (todo en la tarjeta gráfica).
+    const ringOpacity = calm ? 0.18 : 0.32;
+    const startRings = () => {
+      const total = T.exit[1];
+      rosette.animate([{ opacity: 0 }, { opacity: ringOpacity }], { duration: 600, easing: EASE_OUT, fill: 'forwards' });
+      if (!calm) {
+        rosette.animate([{ rotate: '0deg' }, { rotate: `${total * 0.012}deg` }], { duration: total, fill: 'forwards' });
+        rosette.animate([{ scale: 1 }, { scale: 1.04 }], { delay: T.line[1] - 100, duration: 600, easing: EASE_OUT, fill: 'forwards' });
+      }
+    };
 
     let start = performance.now();
-    let assembled = false;
-    let landing = null;
-    const setT = (ms) => { start = performance.now() - ms; };
+    let exiting = false;
 
-    function frame(now) {
-      let t = now - start;
-      if (skipRequested) {
-        skipRequested = false;
-        if (t < T.hold) { setT(T.hold); t = T.hold; } // salta directo al vuelo final
-        else if (t < T.exit[1] - 80) { setT(T.exit[1] - 80); t = T.exit[1] - 80; }
+    /** Dibuja el logo tal como está en el instante t (ms). */
+    function paint(t) {
+      // Guilloché: se traza una sola vez al principio.
+      if (t <= T.rings + 50) {
+        const draw = outQuint(prog(t, [0, T.rings]));
+        rings.forEach((ring, i) => setA(ring, 'stroke-dashoffset', r3(1 - clamp(draw * 1.15 - i * 0.04))));
       }
-
-      // Fondo y guilloché.
-      const out = inOut(prog(t, [T.exit[0] + 100, T.exit[1] - 50]));
-      bg.style.opacity = String(1 - out);
-      const draw = outQuint(prog(t, [0, calm ? 1 : 1500]));
-      rings.forEach((ring, i) => ring.setAttribute('stroke-dashoffset', String(1 - clamp(draw * 1.15 - i * 0.04))));
-      rosette.style.opacity = String((calm ? 0.18 : 0.32) * outQuint(prog(t, [0, 600])) * (1 - out));
-      rosette.style.transform = calm ? '' : `rotate(${t * 0.012}deg) scale(${1 + 0.04 * outExpo(prog(t, [T.line[1] - 100, T.line[1] + 500]))})`;
       hint.style.opacity = t > 900 && t < T.hold ? '1' : '0';
 
       // Trazo y relleno de las letras.
-      const dA = outQuint(prog(t, [T.draw[0], T.draw[1] - 150]));
-      const dC = outQuint(prog(t, [T.draw[0] + 150, T.draw[1]]));
       if (!calm) {
-        a.setAttribute('stroke-dashoffset', String(1 - dA));
-        c.setAttribute('stroke-dashoffset', String(1 - dC));
+        setA(a, 'stroke-dashoffset', r3(1 - inOutSine(prog(t, T.drawA))));
+        setA(c, 'stroke-dashoffset', r3(1 - inOutSine(prog(t, T.drawC))));
       }
-      const fill = outQuint(prog(t, T.fill));
+      const fill = r3(outQuint(prog(t, T.fill)));
+      const strokeOut = calm ? '0' : r3(1 - outQuint(prog(t, [T.fill[0] + 200, T.fill[1] + 150])));
       for (const p of [a, c]) {
-        p.setAttribute('fill-opacity', String(fill));
-        if (!calm) p.setAttribute('stroke-opacity', String(1 - outQuint(prog(t, [T.fill[0] + 200, T.fill[1] + 150]))));
+        setA(p, 'fill-opacity', fill);
+        setA(p, 'stroke-opacity', strokeOut);
       }
 
       // La raya cruza y suelta el destello.
       const lineP = calm ? prog(t, T.line) : outQuint(prog(t, T.line));
-      lineClip.setAttribute('width', String((LINE_SPAN + 40) * lineP));
+      setA(lineClip, 'width', r1((LINE_SPAN + 40) * lineP));
       if (!calm) {
         const f = prog(t, [T.line[1] - 120, T.line[1] + 380]);
-        flash.setAttribute('r', String(40 + 300 * outExpo(f)));
-        flash.setAttribute('opacity', String(f <= 0 ? 0 : 0.9 * (1 - f)));
+        setA(flash, 'r', r1(40 + 300 * outExpo(f)));
+        setA(flash, 'opacity', r3(f <= 0 ? 0 : 0.9 * (1 - f)));
       }
 
       // El monograma viene desde el centro y se corre; aparece la palabra.
       const slide = inOut(prog(t, [T.word[0] - 150, T.word[1]]));
-      const grow = calm ? 1 : lerp(1.32, 1.12, outExpo(prog(t, [0, 1300])));
+      const grow = calm ? 1 : lerp(1.32, 1.12, outExpo(prog(t, [0, T.fill[1] - 100])));
       const scale = lerp(grow, 1, slide);
       const dx = (LOGO_CENTER - MONO_CENTER) * (1 - slide);
       const cy = 342;
-      mono.setAttribute('transform', `translate(${dx} 0) translate(${MONO_CENTER} ${cy}) scale(${scale}) translate(${-MONO_CENTER} ${-cy})`);
+      setA(mono, 'transform', `translate(${r1(dx)} 0) translate(${MONO_CENTER} ${cy}) scale(${r3(scale)}) translate(${-MONO_CENTER} ${-cy})`);
       // La palabra sale de detrás del monograma y viaja con él: nunca se pisan.
       const wordP = outQuint(prog(t, T.word));
-      wordClip.setAttribute('width', String(WORD_SPAN * wordP));
-      word.setAttribute('transform', `translate(${dx} 0)`);
-      word.setAttribute('opacity', String(clamp(wordP * 1.6)));
+      setA(wordClip, 'width', r1(WORD_SPAN * wordP));
+      setA(word, 'transform', `translate(${r1(dx)} 0)`);
+      setA(word, 'opacity', r3(clamp(wordP * 1.6)));
+    }
 
-      // Vuelo a la barra (o, si no se ve, se encoge en su sitio) y la página se arma.
-      if (t >= T.page && !assembled) {
-        assembled = true;
-        landing = target();
-        assemblePage();
-      }
-      const fly = inOut(prog(t, T.exit));
-      if (fly > 0) {
-        layer.style.pointerEvents = 'none'; // la página ya se puede tocar
-        if (calm) {
-          svg.style.opacity = String(1 - fly); // versión calmada: se desvanece en su sitio
-        } else {
-          const to = landing ?? { x: from.x + from.w * 0.3, y: from.y + from.h * 0.3, w: from.w * 0.4, h: from.h * 0.4 };
-          const s = lerp(1, to.w / from.w, fly);
-          svg.style.transform = `translate(${lerp(0, to.x - from.x, fly)}px, ${lerp(0, to.y - from.y, fly)}px) scale(${s})`;
-          if (!landing) svg.style.opacity = String(1 - fly);
-        }
-      }
+    /** Final: el logo vuela a la barra, el fondo se disuelve y la página se arma. */
+    function exit() {
+      if (exiting) return;
+      exiting = true;
+      removeEventListener('resize', onResize);
+      paint(T.hold); // el logo queda completo, pase lo que pase
+      layer.style.pointerEvents = 'none'; // la página ya se puede tocar
+      hint.style.opacity = '0';
 
-      if (t >= T.end) { cleanup(); return; }
+      const landing = target(); // se mide antes de que la barra empiece a moverse
+      assemblePage();
+
+      const duration = T.exit[1] - T.exit[0];
+      bg.animate([{ opacity: 1 }, { opacity: 0 }], { delay: 100, duration: duration - 150, easing: EASE_IN_OUT, fill: 'forwards' });
+      rosette.animate([{ opacity: ringOpacity }, { opacity: 0 }], { delay: 100, duration: duration - 150, easing: EASE_IN_OUT, fill: 'forwards' });
+      let fly;
+      if (calm) {
+        fly = svg.animate([{ opacity: 1 }, { opacity: 0 }], { duration, easing: EASE_IN_OUT, fill: 'forwards' });
+      } else {
+        const to = landing ?? { x: from.x + from.w * 0.3, y: from.y + from.h * 0.3, w: from.w * 0.4, h: from.h * 0.4 };
+        const frames = [
+          { transform: 'translate(0px, 0px) scale(1)', opacity: 1 },
+          { transform: `translate(${to.x - from.x}px, ${to.y - from.y}px) scale(${to.w / from.w})`, opacity: landing ? 1 : 0 },
+        ];
+        fly = svg.animate(frames, { duration, easing: EASE_IN_OUT, fill: 'forwards' });
+      }
+      fly.finished.then(cleanup, cleanup);
+      setTimeout(cleanup, duration + 600); // por si el navegador no avisa (pestaña escondida, etc.)
+      onSkip = cleanup; // un segundo toque durante el vuelo termina ya
+    }
+
+    function frame(now) {
+      if (finished || exiting) return;
+      let t = now - start;
+      if (skipRequested) { skipRequested = false; t = T.hold; } // salta directo al vuelo final
+      if (t >= T.hold) { exit(); return; }
+      paint(t);
       requestAnimationFrame(frame);
     }
-    requestAnimationFrame((now) => { start = now; frame(now); });
+
+    // Al abrir, el navegador pasa un rato acomodando toda la portada (en un celular, unas décimas de segundo en las
+    // que no puede dibujar). Se espera a que eso pase —3 cuadros seguidos a tiempo, o 1,2 s como mucho— para que el
+    // trazo de las letras empiece sin tirones. Mientras, se ve el fondo de la marca.
+    const t0 = performance.now();
+    let prev = t0;
+    let steady = 0;
+    const settle = (now) => {
+      if (finished) return;
+      steady = now - prev < 34 ? steady + 1 : 0;
+      prev = now;
+      if (steady >= 3 || now - t0 > 1200 || skipRequested) {
+        start = now;
+        startRings();
+        frame(now);
+      } else {
+        requestAnimationFrame(settle);
+      }
+    };
+    requestAnimationFrame(settle);
   }
 })();

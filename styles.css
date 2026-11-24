@@ -374,6 +374,23 @@ summary::-webkit-details-marker { display: none; }
 .ghost--fill { background: var(--ink); color: var(--paper); border-color: transparent; }
 .ghost--fill:hover { background: #fff; }
 .install__go { margin-top: 36px; }
+.install__soon { color: var(--muted); font-size: .9375rem; margin-top: 14px; min-height: 1.5em; }
+
+/* ── Beta ── */
+.beta-tag {
+  display: inline-flex; align-items: center; gap: 10px; margin-bottom: 22px; padding: 4px 14px 4px 4px;
+  border-radius: 999px; border: 1px solid var(--rule-2); background: var(--sheet);
+  color: var(--muted); font-size: .875rem; font-weight: 600;
+}
+.beta-tag b { padding: 3px 10px; border-radius: 999px; background: var(--kind-solid); color: #fff; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
+.install .beta-tag { margin-bottom: 26px; }
+.beta-notes {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 40px; text-align: left;
+}
+.beta-notes li { padding: 20px 22px; border-radius: 18px; background: var(--sheet); border: 1px solid var(--rule); color: var(--muted); font-size: .9375rem; text-wrap: pretty; }
+.beta-notes strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 1rem; }
+.beta-notes a { color: var(--kind); font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 760px) { .beta-notes { grid-template-columns: 1fr; } }
 
 /* Dibujos de la barra del navegador */
 .art { width: 100%; height: auto; }
@@ -701,18 +718,18 @@ html[data-kind] .foot { background: color-mix(in srgb, var(--kind-deep) 26%, var
 .close__mark { width: clamp(150px, 18vw, 230px); height: auto; }
 .lnav__title img { height: 22px; width: auto; display: block; }
 
-/* ════════ Intro del logo al abrir la portada (intro.js, una vez por sesión) ════════ */
+/* ════════ Intro del logo al abrir la portada (intro.js, cada vez que se abre) ════════ */
 /* Tapa provisional que pone el <head> antes de pintar; si intro.js no llegara, se quita sola a los 3 s. */
 html.has-intro::after { content: ""; position: fixed; inset: 0; z-index: 9998; background: var(--paper); animation: intro-failsafe .3s 3s forwards; }
 @keyframes intro-failsafe { to { opacity: 0; visibility: hidden; } }
 html.intro-run { overflow: hidden; }
 html.intro-run .gnav__logo { opacity: 0; }
 .intro { position: fixed; inset: 0; z-index: 9999; overflow: hidden; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.intro__bg { position: absolute; inset: 0; background:
+.intro__bg { position: absolute; inset: 0; will-change: opacity; background:
   radial-gradient(55% 48% at 50% 48%, rgba(91, 58, 140, .42), rgba(14, 18, 26, 0) 72%),
   radial-gradient(120% 90% at 50% 120%, rgba(52, 32, 79, .5), rgba(14, 18, 26, 0) 60%), var(--paper); }
 .intro__rosette { position: absolute; left: 50%; top: 48%; width: min(72vmin, 620px); height: auto; aspect-ratio: 1;
-  margin: calc(min(72vmin, 620px) / -2) 0 0 calc(min(72vmin, 620px) / -2); opacity: 0; overflow: visible; }
+  margin: calc(min(72vmin, 620px) / -2) 0 0 calc(min(72vmin, 620px) / -2); opacity: 0; overflow: visible; will-change: transform, opacity; }
 .intro__rosette path { fill: none; stroke: #cdbbf0; stroke-width: .5; vector-effect: non-scaling-stroke; }
 .intro__logo { display: block; will-change: transform; }
 .intro__hint { position: absolute; left: 0; right: 0; bottom: max(28px, env(safe-area-inset-bottom)); margin: 0; text-align: center;

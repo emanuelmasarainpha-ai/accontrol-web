@@ -73,7 +73,26 @@ const OS_NAME = { windows: 'Windows', mac: 'Mac', linux: 'Linux', android: 'Andr
 const OS_CTA = { windows: 'Instalar en Windows', mac: 'Instalar en Mac', linux: 'Instalar en Linux', android: 'Instalar en Android', ios: 'Instalar en iPhone' };
 const myOS = detectOS();
 if (myOS) $$('[data-os-cta] [data-os-label]').forEach((el) => { el.textContent = OS_CTA[myOS]; });
-$$('[data-app-link]').forEach((a) => { a.href = APP_URL; a.target = '_blank'; a.rel = 'noopener'; });
+/* Botones que abren la app (la beta). Si APP_URL todavía es la dirección de ejemplo, no llevan a una página rota:
+   avisan que la beta abre pronto. */
+const APP_READY = /^https:\/\//.test(APP_URL) && !APP_URL.includes('TU-DIRECCION');
+function openApp() {
+  if (APP_READY) { window.open(APP_URL, '_blank', 'noopener'); return; }
+  const box = $('.install__go');
+  let msg = $('[data-app-soon]');
+  if (!msg && box) {
+    msg = document.createElement('p');
+    msg.className = 'install__soon';
+    msg.setAttribute('data-app-soon', '');
+    msg.setAttribute('role', 'status');
+    box.append(msg);
+  }
+  if (msg) msg.textContent = 'La beta abre muy pronto. Vuelve en unos días o escríbenos desde Contacto para avisarte.';
+}
+$$('[data-app-link]').forEach((a) => {
+  if (APP_READY) { a.href = APP_URL; a.target = '_blank'; a.rel = 'noopener'; return; }
+  a.addEventListener('click', (e) => { e.preventDefault(); openApp(); });
+});
 
 /* ════════ Navegación global: desplegables ════════ */
 const gnav = $('#gnav');
@@ -166,18 +185,29 @@ function countUp(el, target, ms = 5600) {
   };
   requestAnimationFrame(tick);
 }
-/* Empieza cuando el billete de la portada ya se ve, para que se disfrute desde el principio */
+/* Empieza cuando el billete de la portada ya se ve, para que se disfrute desde el principio.
+   Si está la intro del logo (intro.js), espera a que termine: debajo de ella nadie lo ve y le quitaría fluidez. */
+const introPending = () => document.documentElement.classList.contains('has-intro') || document.documentElement.classList.contains('intro-run');
+function afterIntro(fn) {
+  if (!introPending()) { fn(); return; }
+  let done = false;
+  const go = () => { if (!done) { done = true; fn(); } };
+  addEventListener('accontrol:intro-end', go, { once: true });
+  setTimeout(go, 7000); // por si intro.js no llegara a cargar
+}
 if (countEl) {
   countEl.textContent = '0';
   const cEl = $('[data-cents]');
   if (cEl) cEl.textContent = '.00';
-  const noteIO = new IntersectionObserver((entries) => {
-    if (!entries.some((e) => e.isIntersecting) || counted) return;
-    counted = true;
-    noteIO.disconnect();
-    countUp(countEl, Number(countEl.dataset.count));
-  }, { threshold: 0.35 });
-  noteIO.observe($('.note--hero'));
+  afterIntro(() => {
+    const noteIO = new IntersectionObserver((entries) => {
+      if (!entries.some((e) => e.isIntersecting) || counted) return;
+      counted = true;
+      noteIO.disconnect();
+      countUp(countEl, Number(countEl.dataset.count));
+    }, { threshold: 0.35 });
+    noteIO.observe($('.note--hero'));
+  });
 }
 
 /* ════════ Declaración palabra por palabra ════════ */
@@ -218,7 +248,8 @@ function frame() {
   const b = easeIO(seg(p, 0.08, 0.8));
   heroCopy.style.opacity = String(1 - seg(p, 0.06, 0.32));
   heroCopy.style.transform = `translate3d(0, ${-60 * seg(p, 0, 0.4)}px, 0) scale(${1 - 0.06 * seg(p, 0, 0.4)})`;
-  heroCopy.style.filter = `blur(${8 * seg(p, 0.1, 0.32)}px)`;
+  const heroBlur = 8 * seg(p, 0.1, 0.32);
+  heroCopy.style.filter = heroBlur > 0.05 ? `blur(${heroBlur.toFixed(2)}px)` : ''; // sin desenfoque «en cero»: también cuesta
   lid.style.transform = `rotateX(${(1 - a) * (reduce.matches ? 18 : 52)}deg)`;
   const lift = innerWidth < 600 ? (heroCopy.offsetHeight + 40) * 0.62 : heroCopy.offsetHeight + 40;
   const narrow = innerWidth < 600;
@@ -752,27 +783,27 @@ const artFor = (os, step) => (os === 'android' || os === 'ios' ? phoneArt(os, st
 
 const GUIDES = {
   windows: [
-    ['Abre ACCONTROL en Edge o Chrome.', 'Pulsa «Abrir ACCONTROL» aquí abajo. Se abre en tu navegador como cualquier página.', 'OS:1'],
+    ['Abre ACCONTROL en Edge o Chrome.', 'Pulsa «Abrir la beta» aquí abajo. Se abre en tu navegador como cualquier página.', 'OS:1'],
     ['Pulsa «Instalar».', `En la barra de direcciones aparece ${ui(I.install, 'Instalar')}. Si no lo ves, busca la opción para instalar la página como app en el menú ${ui(I.dotsH)} del navegador.`, 'OS:2'],
     ['Ábrela desde Inicio.', 'ACCONTROL queda en el menú Inicio con su ícono y se abre en su propia ventana. Puedes anclarla a la barra de tareas.', 'OS:3'],
   ],
   mac: [
-    ['Abre ACCONTROL en Safari, Chrome o Edge.', 'Pulsa «Abrir ACCONTROL» aquí abajo.', 'OS:1'],
+    ['Abre ACCONTROL en Safari, Chrome o Edge.', 'Pulsa «Abrir la beta» aquí abajo.', 'OS:1'],
     ['Añádela como app.', `En Safari: menú Archivo, «Añadir al Dock» (macOS Sonoma o posterior). En Chrome o Edge: ${ui(I.install, 'Instalar')} en la barra de direcciones.`, 'OS:2'],
     ['Ábrela desde el Dock.', 'Queda en el Dock y en tus aplicaciones, con su ventana propia.', 'OS:3'],
   ],
   linux: [
-    ['Abre ACCONTROL en Chrome, Chromium o Edge.', 'Pulsa «Abrir ACCONTROL» aquí abajo.', 'OS:1'],
+    ['Abre ACCONTROL en Chrome, Chromium o Edge.', 'Pulsa «Abrir la beta» aquí abajo.', 'OS:1'],
     ['Pulsa «Instalar».', `Usa ${ui(I.install, 'Instalar')} en la barra de direcciones, o la opción de instalar del menú ${ui(I.dotsH)}.`, 'OS:2'],
     ['Ábrela desde tus aplicaciones.', 'Aparece en el menú de aplicaciones de tu escritorio.', 'OS:3'],
   ],
   android: [
-    ['Abre ACCONTROL en Chrome.', 'Pulsa «Abrir ACCONTROL» aquí abajo desde tu celular.', 'OS:1'],
+    ['Abre ACCONTROL en Chrome.', 'Pulsa «Abrir la beta» aquí abajo desde tu celular.', 'OS:1'],
     ['Instala la app.', `Toca el menú ${ui(I.dotsV)} y elige «Instalar aplicación» o «Agregar a la pantalla principal».`, 'OS:2'],
     ['Listo, junto a tus apps.', 'ACCONTROL queda en tu pantalla con su ícono y abre a pantalla completa.', 'OS:3'],
   ],
   ios: [
-    ['Abre ACCONTROL en Safari.', 'Pulsa «Abrir ACCONTROL» aquí abajo desde tu iPhone o iPad.', 'OS:1'],
+    ['Abre ACCONTROL en Safari.', 'Pulsa «Abrir la beta» aquí abajo desde tu iPhone o iPad.', 'OS:1'],
     ['Añádela a la pantalla de inicio.', `Toca ${ui(I.share, 'Compartir')} y elige «Añadir a pantalla de inicio».`, 'OS:2'],
     ['Pulsa «Añadir».', 'ACCONTROL queda en tu pantalla de inicio y abre como una app.', 'OS:3'],
   ],
@@ -802,7 +833,7 @@ function showStep(i, dir = 1) {
   progress.parentElement.style.setProperty('--p', ((curStep + 1) / all.length).toFixed(3));
   progress.style.setProperty('--p', ((curStep + 1) / all.length).toFixed(3));
   back.disabled = curStep === 0;
-  fwd.textContent = curStep === all.length - 1 ? 'Abrir ACCONTROL' : 'Siguiente';
+  fwd.textContent = curStep === all.length - 1 ? 'Abrir la beta' : 'Siguiente';
   countLabel.textContent = `Paso ${curStep + 1} de ${all.length}`;
   return dir;
 }
@@ -829,7 +860,7 @@ osTabs.forEach((t, i) => {
 });
 back.addEventListener('click', () => showStep(curStep - 1, -1));
 fwd.addEventListener('click', () => {
-  if (curStep === GUIDES[curOS].length - 1) { window.open(APP_URL, '_blank', 'noopener'); return; }
+  if (curStep === GUIDES[curOS].length - 1) { openApp(); return; }
   showStep(curStep + 1, 1);
 });
 $('[data-os-found]').textContent = myOS ? `Detectamos ${OS_NAME[myOS]}. ¿Usas otro? Elígelo arriba.` : 'Elige tu sistema.';
