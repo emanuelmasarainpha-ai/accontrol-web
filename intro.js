@@ -1,4 +1,4 @@
-// ACCONTROL · sitio web · INTRO DEL LOGO al abrir la portada (una vez por sesión).
+// ACCONTROL · sitio web · INTRO DEL LOGO al abrir la portada (cada vez que se abre).
 // ----------------------------------------------------------------------------------------------------------------
 // 1. Sobre el fondo de la marca se dibuja el guilloché (las líneas de billete del sitio) y gira despacio.
 // 2. La A y la C del monograma se trazan como con pluma (contorno lila) y se rellenan de marfil.
@@ -9,7 +9,7 @@
 //
 // - Usa las formas REALES del logo (assets/brand/logo-noche.svg), no un dibujo aparte.
 // - La decide el script del <head> de index.html (clase `has-intro`), antes de pintar, para que no se vea la página
-//   un instante. Sin JavaScript, con un enlace a una sección (#…) o ya vista en esta sesión, no sale.
+//   un instante. Sin JavaScript, o con un enlace a otra sección (#…, salvo #resumen), no sale.
 // - Un toque, un clic o una tecla la saltan. Con «reducir movimiento» sale una versión calmada (solo fundidos).
 // - No usa librerías: un reloj con requestAnimationFrame para el logo y la Web Animations API para la página.
 'use strict';
@@ -18,7 +18,6 @@
   const root = document.documentElement;
   if (!root.classList.contains('has-intro')) return;
 
-  const KEY = 'accontrol.webintro.v1';
   const SVGNS = 'http://www.w3.org/2000/svg';
   const LOGO_URL = 'assets/brand/logo-noche.svg';
   const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -51,7 +50,6 @@
 
   // Pestaña en segundo plano: no vale la pena (nadie la vería y los relojes van lentos).
   if (document.visibilityState === 'hidden') { cleanup(); return; }
-  try { sessionStorage.setItem(KEY, '1'); } catch { /* sin almacenamiento: saldrá otra vez, no pasa nada */ }
 
   // ---- Guilloché (hipotrocoides, como en el resto del sitio) ----------------------------------------------------
   const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
