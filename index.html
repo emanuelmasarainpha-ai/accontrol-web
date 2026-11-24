@@ -11,10 +11,13 @@
   <link rel="apple-touch-icon" href="assets/icon-512.png">
   <link rel="preload" href="assets/fonts/bodoni-moda-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=20261122c">
+  <!-- Intro del logo (intro.js): una vez por sesión, solo al entrar a la portada sin enlace a una sección. -->
+  <script>try{if(!location.hash&&!sessionStorage.getItem('accontrol.webintro.v1'))document.documentElement.classList.add('has-intro')}catch(e){}</script>
+  <link rel="stylesheet" href="styles.css?v=20261123a">
   <link rel="stylesheet" href="site.css?v=20261121a">
   <script src="main.js?v=20261114b" defer></script>
   <script src="site.js?v=20261121a" defer></script>
+  <script src="intro.js?v=20261123a" defer></script>
   <link rel="canonical" href="https://accontrol-web.vercel.app/">
   <meta property="og:site_name" content="ACCONTROL">
   <meta property="og:locale" content="es_DO">
