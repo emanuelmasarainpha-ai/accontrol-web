@@ -102,7 +102,7 @@ No son asesoría legal: conviene que las revise un profesional.
 ## Archivos
 
 - `index.html`, `styles.css`, `main.js`: la portada.
-- `intro.js`: la intro animada del logo en la portada. Sale una vez por sesión del navegador, solo al entrar a la portada sin enlace a una sección; se salta con un toque, una tecla o la rueda del ratón. Con «reducir movimiento» activado en el equipo, solo aparece y se desvanece. Para volver a verla: abrir la portada en una pestaña nueva.
+- `intro.js`: la intro animada del logo en la portada. Sale una vez por sesión del navegador, solo al entrar a la portada sin enlace a otra sección (`#resumen`, la parte de arriba, sí la muestra); se salta con un toque, una tecla o la rueda del ratón. Con «reducir movimiento» activado en el equipo, solo aparece y se desvanece. Para volver a verla: abrir la portada en una pestaña nueva.
 - `site.css`, `site.js`: blog, páginas nuevas, aviso de cookies y anuncios (también los usa la portada para el pie y el aviso).
 - `site.config.mjs`: dirección del sitio, categorías, anuncios, contacto (no se publica).
 - `content/blog/`, `content/paginas/`: el texto de los artículos y las páginas (no se publica).
