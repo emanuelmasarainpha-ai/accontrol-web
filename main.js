@@ -1,8 +1,8 @@
 // ACCONTROL · sitio web. Sin librerías: guilloché, navegación, escenas con el scroll, espacios e instalación.
 'use strict';
 
-/* ════════ Dirección de la app (cámbiala aquí cuando la publiques) ════════ */
-const APP_URL = 'https://TU-DIRECCION-DE-LA-APP/';
+/* ════════ Dirección de la app (la beta publicada en Vercel) ════════ */
+const APP_URL = 'https://accontrol-j54c.vercel.app/';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
